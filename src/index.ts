@@ -1,23 +1,24 @@
 import express from 'express';
 import cors from 'cors';
+import mongoose from 'mongoose'; // Agregar esto
 import { ENV } from './config/env.ts';
-import { getTelemetry } from './modules/telemetry/controller.ts';
-import { telemetryService } from './modules/telemetry/service.ts';
+import { getTelemetry } from './modules/telemetry/controller';
+import { telemetryService } from './modules/telemetry/service';
 
 const app = express();
-
-// Middlewares globales
 app.use(cors());
 app.use(express.json());
 
-// Endpoint de la API mapeado al controlador
+// NUEVO: Conexión a MongoDB antes de iniciar el servicio
+mongoose.connect(ENV.MONGO_URI || "mongodb://127.0.0.1:27017/alfa_iot")
+  .then(() => {
+    console.log('🍃 Conectado a MongoDB');
+    telemetryService.iniciarSincronizacion();
+  })
+  .catch(err => console.error('❌ Error de conexión:', err.message));
+
 app.get('/api/telemetria', getTelemetry);
 
-// Arrancar el Worker de fondo para el NodeMCU
-telemetryService.iniciarSincronizacion();
-
-// Levantar el servidor Express
 app.listen(ENV.PORT, () => {
-  console.log(`\n🚀 Servidor Alfa IoT inicializado en la arquitectura limpia.`);
-  console.log(`🌍 API disponible en: http://localhost:${ENV.PORT}/api/telemetria`);
+ console.log(`🚀 Servidor Alfa IoT activo en puerto ${ENV.PORT}`);
 });
