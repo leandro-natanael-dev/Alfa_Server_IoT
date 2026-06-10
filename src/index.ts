@@ -2,8 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose'; // Agregar esto
 import { ENV } from './config/env.ts';
-import { getTelemetry } from './modules/telemetry/controller';
-import { telemetryService } from './modules/telemetry/service';
+import { getTelemetry, getStats } from './modules/telemetry/controller.ts';
+import { telemetryService } from './modules/telemetry/service.ts';
 
 const app = express();
 app.use(cors());
@@ -18,6 +18,7 @@ mongoose.connect(ENV.MONGO_URI || "mongodb://127.0.0.1:27017/alfa_iot")
   .catch(err => console.error('❌ Error de conexión:', err.message));
 
 app.get('/api/telemetria', getTelemetry);
+app.get('/api/stats', getStats);
 
 app.listen(ENV.PORT, () => {
  console.log(`🚀 Servidor Alfa IoT activo en puerto ${ENV.PORT}`);

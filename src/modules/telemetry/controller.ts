@@ -18,3 +18,30 @@ export const getTelemetry = (req: Request, res: Response): void => {
     alerta_conexion: error ? 'Alerta: Usando última lectura guardada. Placa desconectada.' : null
   });
 };
+
+export const getStats = async (req: Request, res: Response): Promise<void> => {
+  const { rango } = req.query;
+  
+  try {
+    const stats = await telemetryService.getPromedios(rango as string);
+
+    if (!stats) {
+      res.status(200).json({ 
+        success: true, 
+        data: [], 
+        message: `No hay suficientes datos históricos para el rango de ${rango} solicitado.` 
+      });
+      return;
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      data: stats 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: "Error interno al procesar las estadísticas." 
+    });
+  }
+};
