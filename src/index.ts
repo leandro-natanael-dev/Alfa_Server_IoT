@@ -1,25 +1,14 @@
-import express from 'express';
-import cors from 'cors';
-import mongoose from 'mongoose'; // Agregar esto
-import { ENV } from './config/env.ts';
-import { getTelemetry, getStats } from './modules/telemetry/controller.ts';
-import { telemetryService } from './modules/telemetry/service.ts';
+import { ExpressServer } from "./infrastructure/http/express-server.js";
+import { MongoDataBase } from "./infrastructure/database/mongoose_config.js";
+import { SyncTelemetryUseCase } from "./application/useCases/syncTelemetryUseCase.js";
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+async function bootstrap() {
+  await MongoDataBase.conectar();
 
-// NUEVO: Conexión a MongoDB antes de iniciar el servicio
-mongoose.connect(ENV.MONGO_URI || "mongodb://127.0.0.1:27017/alfa_iot")
-  .then(() => {
-    console.log('🍃 Conectado a MongoDB');
-    telemetryService.iniciarSincronizacion();
-  })
-  .catch(err => console.error('❌ Error de conexión:', err.message));
+  const syncTelemetry = new SyncTelemetryUseCase();
+  await syncTelemetry.execute();
 
-app.get('/api/telemetria', getTelemetry);
-app.get('/api/stats', getStats);
-
-app.listen(ENV.PORT, () => {
- console.log(`🚀 Servidor Alfa IoT activo en puerto ${ENV.PORT}`);
-});
+  const server = new ExpressServer();
+  server.escuchar();
+}
+bootstrap();
